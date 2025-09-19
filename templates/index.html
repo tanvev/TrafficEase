@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrafficEase - Smart Traffic Management</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide-react@0.292.0/dist/lucide-react.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+
+<style>
+    body { font-family: 'Inter', sans-serif; background-color: #0f172a; }
+    .glassmorphism { background: rgba(30,41,59,0.6); backdrop-filter: blur(10px); border: 1px solid rgba(51,65,85,0.3);}
+    .section-hidden { display:none; }
+    .gradient-text { background: -webkit-linear-gradient(45deg,#34d399,#60a5fa); -webkit-background-clip:text; -webkit-text-fill-color:transparent;}
+    ::-webkit-scrollbar { width:8px; } ::-webkit-scrollbar-track {background:#1e293b;} ::-webkit-scrollbar-thumb {background:#334155; border-radius:4px;}
+    ::-webkit-scrollbar-thumb:hover { background:#475569; }
+    .vehicle { position:absolute; width:16px; height:16px; border-radius:50%; }
+</style>
+</head>
+<body class="text-gray-200">
+
+<!-- Landing Page -->
+<main id="landing-page" class="min-h-screen flex flex-col items-center justify-center p-4 bg-cover bg-center" style="background-image:url('https://placehold.co/1920x1080/0f172a/334155?text=Cityscape+Night');">
+    <div class="absolute inset-0 bg-slate-900/80"></div>
+    <div class="text-center z-10">
+        <h1 class="text-5xl md:text-7xl font-bold mb-2"><span class="gradient-text">Traffic</span><span class="text-emerald-400">Ease</span></h1>
+        <p class="text-lg md:text-xl text-slate-300 mb-12">Smart traffic management system for seamless urban mobility.</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 z-10 w-full max-w-5xl">
+        <div id="driver-portal-btn" class="glassmorphism rounded-2xl p-8 text-center cursor-pointer hover:bg-slate-700/80 transition-all duration-300 transform hover:-translate-y-2">
+            <div class="flex justify-center mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9L2 12v9h2v-2h10v2h2v-4h-2v-2h2z"/><path d="M5 12H2v.5"/><path d="m22 12-2.3-1.4"/><circle cx="8" cy="18" r="2"/><circle cx="16" cy="18" r="2"/></svg>
+            </div>
+            <h2 class="text-2xl font-bold mb-2 text-white">Driver Portal</h2>
+            <p class="text-slate-400">Access real-time traffic data, optimal routes, and parking information.</p>
+        </div>
+        <div id="emergency-portal-btn" class="glassmorphism rounded-2xl p-8 text-center cursor-pointer hover:bg-slate-700/80 transition-all duration-300 transform hover:-translate-y-2">
+            <div class="flex justify-center mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+            </div>
+            <h2 class="text-2xl font-bold mb-2 text-white">Emergency Services</h2>
+            <p class="text-slate-400">Priority routing and traffic signal control for emergency response.</p>
+        </div>
+        <div id="authority-portal-btn" class="glassmorphism rounded-2xl p-8 text-center cursor-pointer hover:bg-slate-700/80 transition-all duration-300 transform hover:-translate-y-2">
+            <div class="flex justify-center mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+            </div>
+            <h2 class="text-2xl font-bold mb-2 text-white">Authority Dashboard</h2>
+            <p class="text-slate-400">Monitor live traffic, view analytics, and manage the city's traffic flow.</p>
+        </div>
+    </div>
+</main>
+
+<!-- App Content -->
+<div id="app-content" class="section-hidden">
+    <header class="bg-slate-800/80 backdrop-blur-sm p-4 flex justify-between items-center fixed top-0 left-0 w-full z-20 border-b border-slate-700">
+        <h1 class="text-2xl font-bold"><span class="gradient-text">Traffic</span><span class="text-emerald-400">Ease</span></h1>
+        <button id="back-to-landing-btn" class="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg> Exit Portal
+        </button>
+    </header>
+
+    <div class="pt-20">
+
+        <!-- Driver Portal -->
+<section id="driver-portal" class="section-hidden p-4 md:p-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-7xl mx-auto">
+        <!-- Left Panel: Navigation & Parking -->
+        <div class="lg:col-span-3 space-y-6">
+            <div class="glassmorphism p-4 rounded-xl">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-white">Smart Navigation</h3>
+                    <div class="flex items-center gap-2">
+                        <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded-lg text-sm">Driver</button>
+                        <button class="bg-slate-600 hover:bg-slate-500 text-white font-bold py-2 px-3 rounded-lg text-sm">Emergency</button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mt-4">
+                    <button class="bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-300 font-semibold p-4 rounded-lg flex flex-col items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+                        <span>Start Navigation</span>
+                    </button>
+                    <button class="bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-300 font-semibold p-4 rounded-lg flex flex-col items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 0 0-4 4v1a4 4 0 0 0 4 4h1a4 4 0 0 0 4-4V6a4 4 0 0 0-4-4z"/><path d="M8 10v1a4 4 0 0 0 4 4h1a4 4 0 0 0 4-4v-1"/><path d="M18 10s-2 2-6 2-6-2-6-2"/><path d="M12 14v7"/><path d="M10 21h4"/></svg>
+                        <span>Find Parking</span>
+                    </button>
+                </div>
+            </div>
+            <div class="glassmorphism p-4 rounded-xl">
+                 <h3 class="text-lg font-semibold text-white mb-3">Your Journey</h3>
+                 <div class="flex justify-between items-center text-slate-300">
+                    <p>Wait Time</p>
+                    <p class="text-xl font-bold text-white">10 <span class="text-sm font-normal">min</span></p>
+                 </div>
+                 <div class="flex justify-between items-center text-slate-300 mt-2">
+                    <p>Alt Routes</p>
+                    <p class="text-xl font-bold text-emerald-400">2 <span class="text-sm font-normal">available</span></p>
+                 </div>
+            </div>
+            <div class="glassmorphism p-4 rounded-xl">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-lg font-semibold text-white">Smart Parking</h3>
+                    <a href="#" class="text-sm text-blue-400 hover:underline">View All</a>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center bg-slate-900/50 p-3 rounded-lg">
+                        <div>
+                            <p class="font-semibold">City Center Mall</p>
+                            <p class="text-sm text-slate-400">0.2 mi away - 2 min drive</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-2xl font-bold text-emerald-400">15</p>
+                            <p class="text-xs text-slate-400">spots free</p>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center bg-slate-900/50 p-3 rounded-lg">
+                        <div>
+                            <p class="font-semibold">Downtown Garage</p>
+                            <p class="text-sm text-slate-400">0.8 mi away - 5 min drive</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-2xl font-bold text-yellow-400">3</p>
+                            <p class="text-xs text-slate-400">spots free</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Middle Panel: Alerts -->
+        <div class="lg:col-span-4">
+            <div class="glassmorphism p-4 rounded-xl h-full">
+                <div class="flex items-center justify-between mb-4">
+                     <h3 class="text-lg font-semibold text-white">Traffic Alerts</h3>
+                     <a href="#" class="text-sm text-blue-400 hover:underline">Clear All</a>
+                </div>
+                <div class="space-y-4 overflow-y-auto max-h-[600px]">
+                    <div class="border-l-4 border-red-500 bg-red-500/10 p-4 rounded-r-lg">
+                        <p class="font-bold text-red-300">Road Construction</p>
+                        <p class="text-sm text-slate-300">Main Street blocked between 5th & 6th Ave. Expected delay: 15 min.</p>
+                    </div>
+                    <div class="border-l-4 border-orange-500 bg-orange-500/10 p-4 rounded-r-lg">
+                        <p class="font-bold text-orange-300">Heavy Traffic</p>
+                        <p class="text-sm text-slate-300">Congestion on Highway 101 southbound. Consider alternate routes.</p>
+                    </div>
+                    <div class="border-l-4 border-green-500 bg-green-500/10 p-4 rounded-r-lg">
+                        <p class="font-bold text-green-300">Green Wave Available</p>
+                        <p class="text-sm text-slate-300">Synchronized signals on Park Avenue. Speed 25 mph for optimal flow.</p>
+                    </div>
+                    <div class="border-l-4 border-cyan-500 bg-cyan-500/10 p-4 rounded-r-lg">
+                        <p class="font-bold text-cyan-300">Route Clear</p>
+                        <p class="text-sm text-slate-300">Your usual route to work is now clear of traffic. Estimated time: 12 min.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Right Panel: Routes & Simulation -->
+        <div class="lg:col-span-5">
+            <div class="glassmorphism p-4 rounded-xl h-full flex flex-col">
+                <h3 class="text-lg font-semibold text-white mb-4">Available Routes</h3>
+                <div id="optimal-path-display" class="mt-4 p-4 bg-slate-900/50 rounded-lg text-white font-semibold">
+    Optimal Path: <span id="optimal-path-text">Calculating...</span>
+</div>
+
+                <div class="flex-grow space-y-4">
+                    <div class="border-2 border-emerald-500 bg-emerald-500/10 p-4 rounded-lg cursor-pointer">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-bold text-lg text-emerald-300">1. Fastest Route</p>
+                                <p class="text-sm text-slate-400">Distance: 8.2 km</p>
+                                <p class="text-sm text-slate-400">Traffic: <span class="text-green-400">Light</span></p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xl font-bold">12 <span class="text-sm font-normal">min</span></p>
+                                <p class="text-xs text-green-400">3 green waves</p>
+                            </div>
+                        </div>
+                        <span class="text-xs font-bold text-emerald-400 bg-emerald-900 px-2 py-1 rounded-full mt-2 inline-block">RECOMMENDED</span>
+                    </div>
+                    <div class="border border-slate-600 bg-slate-900/50 p-4 rounded-lg cursor-pointer hover:border-blue-500">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-bold text-lg text-blue-300">2. Scenic Route</p>
+                                <p class="text-sm text-slate-400">Distance: 9.1 km</p>
+                                <p class="text-sm text-slate-400">Traffic: <span class="text-yellow-400">Moderate</span></p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xl font-bold">15 <span class="text-sm font-normal">min</span></p>
+                            </div>
+                        </div>
+                        <span class="text-xs font-bold text-blue-400 bg-blue-900 px-2 py-1 rounded-full mt-2 inline-block">ALTERNATIVE</span>
+                    </div>
+                    <div class="border border-slate-600 bg-slate-900/50 p-4 rounded-lg cursor-pointer hover:border-blue-500">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-bold text-lg text-slate-300">3. Highway Route</p>
+                                <p class="text-sm text-slate-400">Distance: 12.8 km</p>
+                                <p class="text-sm text-slate-400">Traffic: <span class="text-red-400">Heavy</span></p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xl font-bold">18 <span class="text-sm font-normal">min</span></p>
+                                <p class="text-xs text-green-400">1 green wave</p>
+                            </div>
+                        </div>
+                        <span class="text-xs font-bold text-slate-400 bg-slate-700 px-2 py-1 rounded-full mt-2 inline-block">LONGER</span>
+                    </div>
+                </div>
+                <div class="mt-6">
+                    <canvas id="traffic-simulation" class="w-full h-40 rounded-lg bg-slate-900/50"></canvas>
+                </div>
+                <button class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Start Navigation</button>
+            </div>
+        </div>
+    </div>
+</section>
+
+        <!-- Emergency Portal -->
+<section id="emergency-portal" class="section-hidden p-4 md:p-8 flex flex-col items-center justify-center min-h-[calc(100vh-80px)]">
+    <div class="max-w-md w-full glassmorphism p-8 rounded-2xl text-center">
+        <div class="flex justify-center mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-500"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+        </div>
+        <h2 class="text-3xl font-bold text-white mb-4">Emergency Services</h2>
+        <p class="text-slate-400 mb-6">Initiate a priority green corridor for an emergency vehicle.</p>
+        <div class="bg-slate-900/50 p-4 rounded-lg mb-6">
+            <p class="text-lg">Status: <span class="font-bold text-emerald-400" id="emergency-status">No Active Emergency</span></p>
+        </div>
+        <div class="mb-4">
+            <canvas id="emergency-simulation" class="w-full h-40 rounded-lg bg-slate-900/50"></canvas>
+        </div>
+        <button id="start-emergency-btn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 px-4 rounded-lg text-xl transition-colors transform hover:scale-105">
+            Initiate Emergency Route
+        </button>
+    </div>
+</section>
+
+
+        <!-- Authority Dashboard -->
+        <section id="authority-portal" class="section-hidden p-4 md:p-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-7xl mx-auto">
+                <div class="lg:col-span-3 space-y-6">
+                    <div class="glassmorphism p-4 rounded-xl">
+                        <h3 class="text-lg font-semibold text-white mb-3">Live City Stats</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center text-slate-300">
+                                <p>Congestion Level</p>
+                                <p class="font-bold text-xl text-yellow-400" id="congestionLevel">congestion%</p>
+                            </div>
+                            <div class="flex justify-between items-center text-slate-300">
+                                <p>Avg. Waiting Time</p>
+                                <p class="font-bold text-xl text-white" id="avgWaitTime">0 s</p>
+                            </div>
+                            <div class="flex justify-between items-center text-slate-300">
+                                <p>Violations Today</p>
+                                <p class="font-bold text-xl text-red-400" id="violationsToday">0</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="lg:col-span-9">
+                    <div class="glassmorphism p-4 rounded-xl h-full">
+                        <h3 class="text-lg font-semibold text-white mb-4">Traffic Congestion Over Lanes</h3>
+                        <canvas id="trafficChart" class="w-full h-[400px]"></canvas>
+                        <div class="relative h-[200px] mt-4 bg-slate-900/50 rounded-lg overflow-hidden">
+                            <div id="lane1" class="vehicle bg-emerald-400" style="top:30px; left:0;"></div>
+                            <div id="lane2" class="vehicle bg-yellow-400" style="top:80px; left:0;"></div>
+                            <div id="lane3" class="vehicle bg-red-400" style="top:130px; left:0;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Sections & buttons
+    const landingPage = document.getElementById('landing-page');
+    const appContent = document.getElementById('app-content');
+    const authorityPortal = document.getElementById('authority-portal');
+    const driverBtn = document.getElementById('driver-portal-btn');
+    const emergencyBtn = document.getElementById('emergency-portal-btn');
+    const authorityBtn = document.getElementById('authority-portal-btn');
+    const backBtn = document.getElementById('back-to-landing-btn');
+
+    function showPortal(portal) {
+        landingPage.classList.add('section-hidden');
+        appContent.classList.remove('section-hidden');
+        authorityPortal.classList.add('section-hidden');
+        portal.classList.remove('section-hidden');
+    }
+    function showLanding() {
+        landingPage.classList.remove('section-hidden');
+        appContent.classList.add('section-hidden');
+        authorityPortal.classList.add('section-hidden');
+    }
+    authorityBtn.addEventListener('click', () => showPortal(authorityPortal));
+    backBtn.addEventListener('click', showLanding);
+
+    // --- Chart.js dynamic chart ---
+    const ctx = document.getElementById('trafficChart').getContext('2d');
+    const trafficData = {
+        labels: ['Lane 1','Lane 2','Lane 3'],
+        datasets: [{
+            label: 'Congestion (%)',
+            data: [30,50,70],
+            backgroundColor: ['#34d399','#facc15','#f87171']
+        }]
+    };
+    const trafficChart = new Chart(ctx,{
+        type:'bar',
+        data:trafficData,
+        options:{responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,max:100}}}
+    });
+
+    // Update chart every 2 sec dynamically
+    setInterval(() => {
+        trafficChart.data.datasets[0].data = [
+            Math.floor(Math.random()*100),
+            Math.floor(Math.random()*100),
+            Math.floor(Math.random()*100)
+        ];
+        trafficChart.update();
+    },2000);
+
+    // --- Vehicle lane simulation ---
+    const lane1 = document.getElementById('lane1');
+    const lane2 = document.getElementById('lane2');
+    const lane3 = document.getElementById('lane3');
+    let positions = [0,0,0];
+
+    function animateVehicles(){
+        const maxWidth = lane1.parentElement.offsetWidth - 16;
+        positions = positions.map((pos,idx) => {
+            let speed = 2 + Math.random()*3; // random speed
+            pos += speed;
+            if(pos > maxWidth) pos=0;
+            return pos;
+        });
+        lane1.style.left = positions[0]+'px';
+        lane2.style.left = positions[1]+'px';
+        lane3.style.left = positions[2]+'px';
+        requestAnimationFrame(animateVehicles);
+    }
+    animateVehicles();
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- Sections & buttons ---
+    const landingPage = document.getElementById('landing-page');
+    const appContent = document.getElementById('app-content');
+    const driverPortal = document.getElementById('driver-portal');
+    const emergencyPortal = document.getElementById('emergency-portal');
+    const authorityPortal = document.getElementById('authority-portal');
+
+    const driverBtn = document.getElementById('driver-portal-btn');
+    const emergencyBtn = document.getElementById('emergency-portal-btn');
+    const authorityBtn = document.getElementById('authority-portal-btn');
+    const backBtn = document.getElementById('back-to-landing-btn');
+
+    function showPortal(portal) {
+        landingPage.classList.add('section-hidden');
+        appContent.classList.remove('section-hidden');
+        [driverPortal, emergencyPortal, authorityPortal].forEach(p => p.classList.add('section-hidden'));
+        portal.classList.remove('section-hidden');
+    }
+    function showLanding() {
+        landingPage.classList.remove('section-hidden');
+        appContent.classList.add('section-hidden');
+        [driverPortal, emergencyPortal, authorityPortal].forEach(p => p.classList.add('section-hidden'));
+    }
+
+    driverBtn.addEventListener('click', () => showPortal(driverPortal));
+    emergencyBtn.addEventListener('click', () => showPortal(emergencyPortal));
+    authorityBtn.addEventListener('click', () => showPortal(authorityPortal));
+    backBtn.addEventListener('click', showLanding);
+
+    // --- Driver Portal Vehicles ---
+    const driverContainer = driverPortal.querySelector('.flex-grow');
+    const driverVehicles = [];
+    const driverColors = ['#34d399','#60a5fa','#facc15','#f87171','#a78bfa','#f472b6','#22d3ee'];
+
+    for(let i=0;i<15;i++){
+        const v = document.createElement('div');
+        v.classList.add('vehicle');
+        v.style.backgroundColor = driverColors[Math.floor(Math.random()*driverColors.length)];
+        v.style.top = (20 + i*20)%300 + 'px';
+        v.style.left = Math.random()*400 + 'px';
+        v.style.width = '16px';
+        v.style.height = '16px';
+        v.speed = 1 + Math.random()*3;
+        driverContainer.appendChild(v);
+        driverVehicles.push(v);
+    }
+
+    function animateDriverVehicles(){
+        const maxWidth = driverContainer.offsetWidth - 16;
+        driverVehicles.forEach(v=>{
+            let left = parseFloat(v.style.left);
+            left += v.speed;
+            if(left > maxWidth) left = 0;
+            v.style.left = left + 'px';
+        });
+        requestAnimationFrame(animateDriverVehicles);
+    }
+    animateDriverVehicles();
+
+    // --- Emergency Portal Vehicles ---
+    const emergencyContainer = emergencyPortal;
+    const emergencyVehicles = [];
+    const emergencyColors = ['#f87171','#fb923c','#facc15'];
+
+    for(let i=0;i<12;i++){
+        const v = document.createElement('div');
+        v.classList.add('vehicle');
+        v.style.backgroundColor = emergencyColors[Math.floor(Math.random()*emergencyColors.length)];
+        v.style.top = (20 + i*25)%300 + 'px';
+        v.style.left = Math.random()*400 + 'px';
+        v.style.width = '16px';
+        v.style.height = '16px';
+        v.speed = 2 + Math.random()*4;
+        emergencyContainer.appendChild(v);
+        emergencyVehicles.push(v);
+    }
+
+    function animateEmergencyVehicles(){
+        const maxWidth = emergencyContainer.offsetWidth - 16;
+        emergencyVehicles.forEach(v=>{
+            let left = parseFloat(v.style.left);
+            left += v.speed;
+            if(left > maxWidth) left = 0;
+            v.style.left = left + 'px';
+        });
+        requestAnimationFrame(animateEmergencyVehicles);
+    }
+    animateEmergencyVehicles();
+
+    // --- Authority Dashboard Stats ---
+    const congestionEl = document.getElementById('congestionLevel');
+    const waitTimeEl = document.getElementById('avgWaitTime');
+    const violationsEl = document.getElementById('violationsToday');
+
+    function updateAuthorityStats(){
+        congestionEl.textContent = Math.floor(Math.random()*100) + '%';
+        waitTimeEl.textContent = Math.floor(Math.random()*120) + ' s';
+        violationsEl.textContent = Math.floor(Math.random()*200);
+    }
+    setInterval(updateAuthorityStats,2000);
+    updateAuthorityStats();
+
+    // --- Traffic Chart ---
+    const ctx = document.getElementById('trafficChart').getContext('2d');
+    const trafficChart = new Chart(ctx,{
+        type:'bar',
+        data:{
+            labels:['Lane 1','Lane 2','Lane 3'],
+            datasets:[{
+                label:'Congestion (%)',
+                data:[30,50,70],
+                backgroundColor:['#34d399','#facc15','#f87171']
+            }]
+        },
+        options:{
+            responsive:true,
+            plugins:{legend:{display:false}},
+            scales:{y:{beginAtZero:true,max:100}}
+        }
+    });
+
+    setInterval(()=>{
+        trafficChart.data.datasets[0].data = [
+            Math.floor(Math.random()*100),
+            Math.floor(Math.random()*100),
+            Math.floor(Math.random()*100)
+        ];
+        trafficChart.update();
+    },2000);
+
+    // --- Authority lane simulation ---
+    const laneEls = ['lane1','lane2','lane3'].map(id=>document.getElementById(id));
+    const lanePositions = [0,0,0];
+    function animateLanes(){
+        const maxWidth = laneEls[0].parentElement.offsetWidth - 16;
+        laneEls.forEach((v,i)=>{
+            let pos = lanePositions[i];
+            pos += 2 + Math.random()*3;
+            if(pos>maxWidth) pos=0;
+            lanePositions[i] = pos;
+            v.style.left = pos+'px';
+        });
+        requestAnimationFrame(animateLanes);
+    }
+    animateLanes();
+});
+    // Road network (graph)
+const roadGraph = {
+    A: {B: 5, C: 10},
+    B: {A: 5, C: 3, D: 7},
+    C: {A: 10, B: 3, D: 1},
+    D: {B: 7, C: 1}
+};
+
+// Function to update weights dynamically based on traffic simulation
+function updateGraphWeights() {
+    // Use random congestion for demo
+    Object.keys(roadGraph).forEach(node => {
+        Object.keys(roadGraph[node]).forEach(neighbor => {
+            const base = roadGraph[node][neighbor];
+            roadGraph[node][neighbor] = base + Math.floor(Math.random()*10); // congestion
+        });
+    });
+}
+
+</script>
+
+
+
+</body>
+</html>
