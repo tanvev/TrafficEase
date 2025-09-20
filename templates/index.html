@@ -207,10 +207,13 @@
                         <span class="text-xs font-bold text-slate-400 bg-slate-700 px-2 py-1 rounded-full mt-2 inline-block">LONGER</span>
                     </div>
                 </div>
-                <div class="mt-6">
-                    <canvas id="traffic-simulation" class="w-full h-40 rounded-lg bg-slate-900/50"></canvas>
-                </div>
-                <button class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Start Navigation</button>
+                <div id="nav-preview" class="mt-4 p-4 bg-slate-900/50 rounded-lg h-32 text-white">
+  Ready to navigate...
+</div>
+<button id="start-nav-btn" class="w-full mt-4 bg-blue-600 text-white py-3 rounded-lg font-semibold">
+  Start Navigation
+</button>
+
             </div>
         </div>
     </div>
@@ -384,30 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const driverVehicles = [];
     const driverColors = ['#34d399','#60a5fa','#facc15','#f87171','#a78bfa','#f472b6','#22d3ee'];
 
-    for(let i=0;i<15;i++){
-        const v = document.createElement('div');
-        v.classList.add('vehicle');
-        v.style.backgroundColor = driverColors[Math.floor(Math.random()*driverColors.length)];
-        v.style.top = (20 + i*20)%300 + 'px';
-        v.style.left = Math.random()*400 + 'px';
-        v.style.width = '16px';
-        v.style.height = '16px';
-        v.speed = 1 + Math.random()*3;
-        driverContainer.appendChild(v);
-        driverVehicles.push(v);
-    }
 
-    function animateDriverVehicles(){
-        const maxWidth = driverContainer.offsetWidth - 16;
-        driverVehicles.forEach(v=>{
-            let left = parseFloat(v.style.left);
-            left += v.speed;
-            if(left > maxWidth) left = 0;
-            v.style.left = left + 'px';
-        });
-        requestAnimationFrame(animateDriverVehicles);
-    }
-    animateDriverVehicles();
 
     // --- Emergency Portal Vehicles ---
     const emergencyContainer = emergencyPortal;
@@ -449,7 +429,7 @@ document.addEventListener('DOMContentLoaded', () => {
         waitTimeEl.textContent = Math.floor(Math.random()*120) + ' s';
         violationsEl.textContent = Math.floor(Math.random()*200);
     }
-    setInterval(updateAuthorityStats,2000);
+    setInterval(updateAuthorityStats,8000);
     updateAuthorityStats();
 
     // --- Traffic Chart ---
@@ -516,8 +496,131 @@ function updateGraphWeights() {
 }
 
 </script>
+<script src="{{ url_for('static', filename='simulation.js') }}"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    // Fetch optimal path
+    fetch("/api/optimal-path")
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("optimal-path-text").textContent = data.path;
+      });
 
+    // Fetch alerts
+    fetch("/api/traffic-alerts")
+      .then(res => res.json())
+      .then(alerts => {
+        const container = document.querySelector("#driver-portal .space-y-4");
+        alerts.forEach(alert => {
+          const div = document.createElement("div");
+          div.className = "border-l-4 bg-slate-900/50 p-4 rounded-r-lg";
+          div.innerHTML = `<p class="font-bold">${alert.type}</p><p>${alert.msg}</p>`;
+          container.appendChild(div);
+        });
+      });
 
+    // Historical analysis → Chart.js
+    fetch("/api/historical-analysis")
+      .then(res => res.json())
+      .then(monthly => {
+        new Chart(document.getElementById("trafficChart"), {
+          type: "line",
+          data: {
+            labels: Object.keys(monthly),
+            datasets: [{
+              label: "Avg Monthly Traffic",
+              data: Object.values(monthly),
+              borderColor: "rgb(75, 192, 192)",
+              tension: 0.3
+            }]
+          }
+        });
+      });
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    // Fetch optimal path every 5 seconds
+    async function updateOptimalPath() {
+        const res = await fetch("/api/optimal-path");
+        const data = await res.json();
+        document.getElementById("optimal-path-text").textContent = data.path + " (Score: " + data.score + ")";
+    }
+    updateOptimalPath();
+    setInterval(updateOptimalPath, 5000);
 
+    // Fetch alerts
+    fetch("/api/traffic-alerts")
+      .then(res => res.json())
+      .then(alerts => {
+        const container = document.querySelector("#driver-portal .space-y-4");
+        container.innerHTML = ""; // clear old alerts
+        alerts.forEach(alert => {
+          const div = document.createElement("div");
+          div.className = "border-l-4 bg-slate-900/50 p-4 rounded-r-lg";
+          div.innerHTML = `<p class="font-bold">${alert.type}</p><p>${alert.msg}</p>`;
+          container.appendChild(div);
+        });
+      });
+
+    // Historical analysis → Chart.js
+    fetch("/api/historical-analysis")
+      .then(res => res.json())
+      .then(monthly => {
+        new Chart(document.getElementById("trafficChart"), {
+          type: "line",
+          data: {
+            labels: Object.keys(monthly),
+            datasets: [{
+              label: "Avg Monthly Traffic",
+              data: Object.values(monthly),
+              borderColor: "rgb(75, 192, 192)",
+              tension: 0.3
+            }]
+          }
+        });
+      });
+});
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+  const routeCards = document.querySelectorAll(".route-card");
+  const navPreview = document.getElementById("nav-preview");
+
+  // Ensure first route is active on load
+  if (routeCards.length > 0) {
+    routeCards[0].classList.add("active");
+    navPreview.innerHTML = `
+      <p class="text-lg">🚘 Following Path: <b>${routeCards[0].dataset.path}</b></p>
+      <p>⏱ ETA: ${routeCards[0].dataset.eta} min</p>
+      <p>📊 Traffic Score: ${Math.floor(Math.random() * 20) + 5}</p>
+    `;
+  }
+
+  // Route selection
+  routeCards.forEach(card => {
+    card.addEventListener("click", () => {
+      routeCards.forEach(c => c.classList.remove("active"));
+      card.classList.add("active");
+    });
+  });
+
+  // Start navigation
+  document.getElementById("start-nav-btn").addEventListener("click", () => {
+    const selectedRoute = document.querySelector(".route-card.active");
+
+    const eta = selectedRoute.dataset.eta;
+    const path = selectedRoute.dataset.path;
+
+    navPreview.innerHTML = `
+      <p class="text-lg">🚘 Following Path: <b>${path}</b></p>
+      <p>⏱ ETA: ${eta} min</p>
+      <p>📊 Traffic Score: ${Math.floor(Math.random() * 20) + 5}</p>
+    `;
+  });
+});
+
+</script>
 </body>
 </html>
