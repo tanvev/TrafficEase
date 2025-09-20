@@ -163,6 +163,15 @@
                 <div id="optimal-path-display" class="mt-4 p-4 bg-slate-900/50 rounded-lg text-white font-semibold">
     Optimal Path: <span id="optimal-path-text">Calculating...</span>
 </div>
+                <div class="glassmorphism p-4 rounded-xl mt-6">
+    <h3 class="text-lg font-semibold text-white mb-4">Traffic Trend Today</h3>
+    <canvas id="dailyTrafficChart" class="w-full h-48 rounded-lg bg-slate-900/50"></canvas>
+    <div id="traffic-prediction" class="mt-4 text-slate-300">
+        Predicted traffic: <span class="font-bold text-emerald-400">Calculating...</span>
+        <p id="traffic-reason" class="text-sm mt-1"></p>
+    </div>
+</div>
+
 
                 <div class="flex-grow space-y-4">
                     <div class="border-2 border-emerald-500 bg-emerald-500/10 p-4 rounded-lg cursor-pointer">
@@ -219,25 +228,225 @@
     </div>
 </section>
 
-        <!-- Emergency Portal -->
-<section id="emergency-portal" class="section-hidden p-4 md:p-8 flex flex-col items-center justify-center min-h-[calc(100vh-80px)]">
-    <div class="max-w-md w-full glassmorphism p-8 rounded-2xl text-center">
-        <div class="flex justify-center mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-500"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
-        </div>
-        <h2 class="text-3xl font-bold text-white mb-4">Emergency Services</h2>
-        <p class="text-slate-400 mb-6">Initiate a priority green corridor for an emergency vehicle.</p>
-        <div class="bg-slate-900/50 p-4 rounded-lg mb-6">
-            <p class="text-lg">Status: <span class="font-bold text-emerald-400" id="emergency-status">No Active Emergency</span></p>
-        </div>
-        <div class="mb-4">
-            <canvas id="emergency-simulation" class="w-full h-40 rounded-lg bg-slate-900/50"></canvas>
-        </div>
-        <button id="start-emergency-btn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 px-4 rounded-lg text-xl transition-colors transform hover:scale-105">
-            Initiate Emergency Route
-        </button>
+       <!-- Emergency Portal -->
+<section id="emergency-portal" class="section-hidden p-4 md:p-8 flex flex-col items-center justify-start min-h-[calc(100vh-80px)] bg-gray-900">
+  <div class="max-w-4xl w-full glassmorphism p-8 rounded-3xl text-center mb-8 shadow-lg">
+    <div class="flex justify-center mb-4">
+      <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-500">
+        <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" x2="12" y1="9" y2="13"/>
+        <line x1="12" x2="12.01" y1="17" y2="17"/>
+      </svg>
     </div>
+    <h2 class="text-4xl font-bold text-white mb-2">Emergency Services Dashboard</h2>
+    <p class="text-slate-400 mb-6 text-lg">Monitor and initiate priority routes for emergency vehicles.</p>
+
+    <!-- Emergency Status -->
+    <div class="bg-slate-900/50 p-4 rounded-lg mb-6 shadow-inner">
+      <p class="text-lg text-white">Current Status:
+        <span class="font-bold text-emerald-400" id="emergency-status">No Active Emergency</span>
+      </p>
+    </div>
+
+    <!-- Simulation / Live Route -->
+    <div class="mb-6">
+      <canvas id="emergency-simulation" class="w-full h-48 rounded-lg bg-slate-800/50 shadow-inner"></canvas>
+    </div>
+
+    <!-- Start Button -->
+    <button id="start-emergency-btn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 px-4 rounded-lg text-xl transition-all transform hover:scale-105 shadow-lg">
+      Initiate Emergency Route
+    </button>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-4xl w-full mb-8">
+    <div class="bg-white/10 backdrop-blur-sm p-6 rounded-xl shadow-lg text-center">
+      <h3 class="text-sm font-medium text-gray-300">Active Emergencies</h3>
+      <p class="text-3xl font-bold text-white" id="active-emergencies">3</p>
+    </div>
+    <div class="bg-white/10 backdrop-blur-sm p-6 rounded-xl shadow-lg text-center">
+      <h3 class="text-sm font-medium text-gray-300">Vehicles Available</h3>
+      <p class="text-3xl font-bold text-white" id="vehicles-available">5</p>
+    </div>
+    <div class="bg-white/10 backdrop-blur-sm p-6 rounded-xl shadow-lg text-center">
+      <h3 class="text-sm font-medium text-gray-300">Avg Response Time</h3>
+      <p class="text-3xl font-bold text-white" id="avg-response">6 min</p>
+    </div>
+    <div class="bg-white/10 backdrop-blur-sm p-6 rounded-xl shadow-lg text-center">
+      <h3 class="text-sm font-medium text-gray-300">Traffic Severity</h3>
+      <p class="text-3xl font-bold text-white" id="traffic-severity">Moderate</p>
+    </div>
+  </div>
+
+  <!-- Active Emergencies Table -->
+  <div class="my-6 max-w-4xl w-full bg-white/10 backdrop-blur-sm p-6 rounded-xl shadow-lg overflow-x-auto">
+    <h2 class="text-xl font-bold mb-4 text-white">Active Emergencies</h2>
+    <table class="min-w-full text-left border border-gray-700 text-white">
+      <thead class="bg-gray-800 text-gray-300">
+        <tr>
+          <th class="px-4 py-2">Incident ID</th>
+          <th class="px-4 py-2">Type</th>
+          <th class="px-4 py-2">Location</th>
+          <th class="px-4 py-2">ETA</th>
+          <th class="px-4 py-2">Status</th>
+        </tr>
+      </thead>
+      <tbody id="emergency-table" class="text-white">
+        <tr>
+          <td class="px-4 py-2">E001</td>
+          <td class="px-4 py-2">Ambulance</td>
+          <td class="px-4 py-2">Sector 12</td>
+          <td class="px-4 py-2">5 min</td>
+          <td class="px-4 py-2"><span class="text-emerald-400 font-bold">En Route</span></td>
+        </tr>
+        <tr>
+          <td class="px-4 py-2">E002</td>
+          <td class="px-4 py-2">Fire Truck</td>
+          <td class="px-4 py-2">Sector 7</td>
+          <td class="px-4 py-2">8 min</td>
+          <td class="px-4 py-2"><span class="text-yellow-400 font-bold">Pending</span></td>
+        </tr>
+        <tr>
+          <td class="px-4 py-2">E003</td>
+          <td class="px-4 py-2">Police Vehicle</td>
+          <td class="px-4 py-2">Sector 15</td>
+          <td class="px-4 py-2">3 min</td>
+          <td class="px-4 py-2"><span class="text-red-500 font-bold">Delayed</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Map Section -->
+  <div class="my-6 max-w-4xl w-full bg-white/10 backdrop-blur-sm p-6 rounded-xl shadow-lg">
+    <h2 class="text-xl font-bold mb-4 text-white">Emergency Vehicle Map</h2>
+    <div id="emergency-map" class="w-full h-96 rounded-xl border border-gray-700"></div>
+  </div>
+
+  <!-- Traffic Trends Chart -->
+  <div class="my-6 max-w-4xl w-full bg-white/10 backdrop-blur-sm p-6 rounded-xl shadow-lg">
+    <h2 class="text-xl font-bold mb-4 text-white">Traffic Trends & Predictions</h2>
+    <canvas id="traffic-chart" class="w-full h-64"></canvas>
+  </div>
 </section>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Sample Traffic Chart Data
+  const ctx = document.getElementById('traffic-chart').getContext('2d');
+  const trafficChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ['6AM','7AM','8AM','9AM','10AM','11AM'],
+      datasets: [
+        {
+          label: 'Historical Traffic',
+          data: [30, 50, 45, 60, 70, 55],
+          borderColor: 'blue',
+          backgroundColor: 'rgba(0,0,255,0.2)',
+          fill: true
+        },
+        {
+          label: 'Predicted Traffic',
+          data: [35, 55, 50, 65, 75, 60],
+          borderColor: 'red',
+          borderDash: [5,5],
+          fill: false
+        }
+      ]
+    },
+    options: { responsive: true, plugins: { legend: { labels: { color: 'white' } } }, scales: { x: { ticks: { color: 'white' } }, y: { ticks: { color: 'white' } } } }
+  });
+</script>
+<script>
+  const canvas = document.getElementById('emergency-simulation');
+  const ctx = canvas.getContext('2d');
+
+  // Set canvas size
+  canvas.width = canvas.offsetWidth;
+  canvas.height = canvas.offsetHeight;
+
+  // Sample route coordinates (x, y) in canvas pixels
+  const route = [
+    {x: 50, y: 200},
+    {x: 150, y: 180},
+    {x: 250, y: 150},
+    {x: 350, y: 120},
+    {x: 450, y: 100},
+    {x: 550, y: 80}
+  ];
+
+  let vehicleIndex = 0; // Current waypoint
+  let progress = 0;     // Progress between waypoints
+  const speed = 0.01;   // Adjust speed
+
+  const emergencyStatus = document.getElementById('emergency-status');
+  const etaDisplay = document.getElementById('avg-response');
+
+  // Draw route
+  function drawRoute() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    // Draw path
+    ctx.beginPath();
+    ctx.moveTo(route[0].x, route[0].y);
+    for(let i=1; i<route.length; i++){
+      ctx.lineTo(route[i].x, route[i].y);
+    }
+    ctx.strokeStyle = '#888';
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    // Draw vehicle
+    let current = route[vehicleIndex];
+    let next = route[vehicleIndex+1] || route[vehicleIndex];
+    let vx = current.x + (next.x - current.x) * progress;
+    let vy = current.y + (next.y - current.y) * progress;
+
+    ctx.beginPath();
+    ctx.arc(vx, vy, 10, 0, 2*Math.PI);
+    ctx.fillStyle = 'red';
+    ctx.fill();
+
+    // Draw waypoints
+    route.forEach(point => {
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, 4, 0, 2*Math.PI);
+      ctx.fillStyle = 'yellow';
+      ctx.fill();
+    });
+  }
+
+  function animate() {
+    if(vehicleIndex < route.length - 1){
+      progress += speed;
+      if(progress >= 1){
+        progress = 0;
+        vehicleIndex++;
+      }
+
+      // Update ETA (simple estimation)
+      let remaining = route.length - vehicleIndex - progress;
+      let etaMinutes = Math.ceil(remaining * 2); // assume 2 min per segment
+      etaDisplay.textContent = `${etaMinutes} min`;
+      emergencyStatus.textContent = "Emergency Active";
+    } else {
+      emergencyStatus.textContent = "Arrived";
+    }
+
+    drawRoute();
+    requestAnimationFrame(animate);
+  }
+
+  // Start animation on button click
+  document.getElementById('start-emergency-btn').addEventListener('click', () => {
+    vehicleIndex = 0;
+    progress = 0;
+    animate();
+  });
+</script>
+
 
 
         <!-- Authority Dashboard -->
@@ -621,6 +830,80 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+</script>
+<script>
+    // Example: traffic_data from backend or simulation
+const traffic_data = {
+    hourly: [20, 25, 30, 40, 35, 50, 60, 70, 80, 65, 55, 45], // hourly traffic %
+    prediction: 60, // predicted traffic %
+    reason: "Moderate congestion expected due to ongoing construction at Main Street."
+};
+
+const ctxDaily = document.getElementById("dailyTrafficChart").getContext("2d");
+
+const dailyChart = new Chart(ctxDaily, {
+    type: "line",
+    data: {
+        labels: ["6 AM","7 AM","8 AM","9 AM","10 AM","11 AM","12 PM","1 PM","2 PM","3 PM","4 PM","5 PM"],
+        datasets: [
+            {
+                label: "Historical Traffic (%)",
+                data: traffic_data.hourly,
+                borderColor: "rgb(75,192,192)",
+                backgroundColor: "rgba(75,192,192,0.2)",
+                tension: 0.3,
+            },
+            {
+                label: "Predicted Traffic (%)",
+                data: Array(traffic_data.hourly.length - 1).fill(null).concat([traffic_data.prediction]),
+                borderColor: "rgb(255,99,132)",
+                borderDash: [5,5],
+                pointBackgroundColor: "red",
+                tension: 0.3,
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { labels: { color: "white" } }
+        },
+        scales: {
+            y: { beginAtZero: true, max: 100, ticks: { color: "white" } },
+            x: { ticks: { color: "white" } }
+        }
+    }
+});
+
+// Update prediction reason
+document.getElementById("traffic-prediction").querySelector("span").textContent = traffic_data.prediction + " %";
+document.getElementById("traffic-reason").textContent = traffic_data.reason;
+
+</script>
+<script>
+const ctx = document.getElementById('traffic-chart').getContext('2d');
+const trafficChart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: ['6AM','7AM','8AM','9AM','10AM','11AM'], // time labels
+    datasets: [
+      {
+        label: 'Historical Traffic',
+        data: [30, 50, 45, 60, 70, 55],
+        borderColor: 'blue',
+        fill: false
+      },
+      {
+        label: 'Predicted Traffic',
+        data: [35, 55, 50, 65, 75, 60],
+        borderColor: 'red',
+        borderDash: [5,5],
+        fill: false
+      }
+    ]
+  },
+  options: { responsive: true }
+});
 </script>
 </body>
 </html>
